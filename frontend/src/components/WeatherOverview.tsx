@@ -5,6 +5,7 @@ type CityWeather = {
   temp: number;
   code: number;
   precipitation: number;
+  windSpeedKmh?: number;
   loading?: boolean;
   error?: string;
   isFallback?: boolean;
@@ -53,6 +54,40 @@ function operationTip(code: number, precipitation: number): string {
   return "Generally suitable; check local conditions.";
 }
 
+/** Small SVG icons for weather overview */
+const IconSun: React.FC<{ size?: number; className?: string }> = ({ size = 20, className }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={className} aria-hidden>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+  </svg>
+);
+
+const IconCloud: React.FC<{ size?: number; className?: string }> = ({ size = 20, className }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={className} aria-hidden>
+    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+  </svg>
+);
+
+const IconRain: React.FC<{ size?: number; className?: string }> = ({ size = 20, className }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={className} aria-hidden>
+    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+    <path d="M8 14v4M12 14v4M16 14v4" />
+  </svg>
+);
+
+const IconWind: React.FC<{ size?: number; className?: string }> = ({ size = 20, className }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={className} aria-hidden>
+    <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10 0h8a2 2 0 1 1 0 4h-8M2 16h6a2 2 0 1 1 0 4H2" />
+  </svg>
+);
+
+/** Pick condition icon from weather code: sun, cloud, or rain */
+function ConditionIcon({ code, size = 22 }: { code: number; size?: number }) {
+  if (code === 0 || code === 1) return <IconSun size={size} className="weather-icon weather-icon-sun" />;
+  if ((code >= 51 && code <= 55) || code >= 61 || code >= 80) return <IconRain size={size} className="weather-icon weather-icon-rain" />;
+  return <IconCloud size={size} className="weather-icon weather-icon-cloud" />;
+}
+
 /** Generate realistic indicative weather for SA cities (used when API is unavailable). */
 function generateFallbackWeather(): CityWeather[] {
   const now = new Date();
@@ -75,11 +110,13 @@ function generateFallbackWeather(): CityWeather[] {
     const codeIndex = (seed + i * 3) % codes.length;
     const code = codes[codeIndex];
     const precip = code >= 61 ? Math.round(((seed + i) % 5) * 0.5 * 10) / 10 : 0;
+    const windSpeedKmh = 5 + ((seed + i * 2) % 12);
     return {
       name: city.name,
       temp: Math.max(8, Math.min(35, temp)),
       code,
       precipitation: precip,
+      windSpeedKmh,
       isFallback: true,
     };
   });
@@ -98,7 +135,7 @@ const WeatherOverview: React.FC = () => {
         results = await Promise.all(
           SA_CITIES.map(async (city) => {
             try {
-              const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current=temperature_2m,weather_code,precipitation&timezone=Africa/Johannesburg`;
+              const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current=temperature_2m,weather_code,precipitation,wind_speed_10m&timezone=Africa/Johannesburg`;
               const res = await fetch(url);
               if (!res.ok) throw new Error("API error");
               const data = await res.json();
@@ -106,7 +143,8 @@ const WeatherOverview: React.FC = () => {
               const temp = cur.temperature_2m ?? 0;
               const code = cur.weather_code ?? 0;
               const precipitation = cur.precipitation ?? 0;
-              return { name: city.name, temp, code, precipitation };
+              const windSpeedKmh = cur.wind_speed_10m != null ? Number(cur.wind_speed_10m) : undefined;
+              return { name: city.name, temp, code, precipitation, windSpeedKmh };
             } catch {
               return { name: city.name, temp: 0, code: 0, precipitation: 0, error: "Unavailable" };
             }
@@ -145,11 +183,25 @@ const WeatherOverview: React.FC = () => {
               <p className="weather-card-meta">{city.error}</p>
             ) : (
               <>
-                <p className="weather-card-temp">{Math.round(city.temp)}°C</p>
+                <div className="weather-card-condition">
+                  <ConditionIcon code={city.code} />
+                  <p className="weather-card-temp">{Math.round(city.temp)}°C</p>
+                </div>
                 <p className="weather-card-desc">{weatherLabel(city.code)}</p>
-                {city.precipitation > 0 && (
-                  <p className="weather-card-precip">Precip: {city.precipitation} mm</p>
-                )}
+                <div className="weather-card-stats">
+                  <span className="weather-stat" title="Condition">
+                    <ConditionIcon code={city.code} size={16} />
+                    <span>{weatherLabel(city.code)}</span>
+                  </span>
+                  <span className="weather-stat" title="Precipitation">
+                    <IconRain size={16} className="weather-icon weather-icon-rain" />
+                    <span>{city.precipitation > 0 ? `${city.precipitation} mm` : "0 mm"}</span>
+                  </span>
+                  <span className="weather-stat" title="Wind speed">
+                    <IconWind size={16} className="weather-icon weather-icon-wind" />
+                    <span>{city.windSpeedKmh != null ? `${Math.round(city.windSpeedKmh)} km/h` : "—"}</span>
+                  </span>
+                </div>
                 <p className="weather-card-tip">{operationTip(city.code, city.precipitation)}</p>
               </>
             )}

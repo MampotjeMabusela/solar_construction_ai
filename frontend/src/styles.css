@@ -1343,6 +1343,9 @@ button.secondary:hover:not(:disabled) {
 /* Weather overview – South Africa */
 .weather-overview {
   margin-bottom: 2rem;
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .weather-overview .home-section-title {
@@ -1357,6 +1360,7 @@ button.secondary:hover:not(:disabled) {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 1rem;
+  margin: 0 auto;
 }
 
 .weather-card {
@@ -1374,6 +1378,38 @@ button.secondary:hover:not(:disabled) {
   color: var(--text-primary);
 }
 
+.weather-card-condition {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.weather-card-condition .weather-card-temp {
+  margin: 0;
+}
+
+.weather-icon {
+  flex-shrink: 0;
+}
+
+.weather-icon-sun {
+  color: #f59e0b;
+}
+
+.weather-icon-cloud {
+  color: var(--text-secondary);
+}
+
+.weather-icon-rain {
+  color: #3b82f6;
+}
+
+.weather-icon-wind {
+  color: var(--text-muted);
+}
+
 .weather-card-temp {
   margin: 0 0 0.25rem;
   font-size: 1.5rem;
@@ -1382,9 +1418,31 @@ button.secondary:hover:not(:disabled) {
 }
 
 .weather-card-desc {
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.35rem;
   font-size: 0.875rem;
   color: var(--text-secondary);
+}
+
+.weather-card-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0.5rem 0 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-light);
+  text-align: left;
+}
+
+.weather-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.weather-stat .weather-icon {
+  flex-shrink: 0;
 }
 
 .weather-card-precip {
@@ -1428,7 +1486,14 @@ button.secondary:hover:not(:disabled) {
   }
 }
 
-/* Services we offer */
+/* Services we offer – centred for symmetry */
+.home-section.home-services {
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 3rem;
+}
+
 .home-services-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -1481,7 +1546,14 @@ button.secondary:hover:not(:disabled) {
   line-height: 1.45;
 }
 
-/* Core values */
+/* Core values – centred for symmetry */
+.home-section.home-values {
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 3rem;
+}
+
 .home-values-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
