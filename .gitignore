@@ -1,0 +1,16 @@
+node_modules
+dist
+.DS_Store
+*.log
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+coverage
+*.pyc
+__pycache__/
+.pytest_cache/
+.venv/
+.idea/
+.vscode/

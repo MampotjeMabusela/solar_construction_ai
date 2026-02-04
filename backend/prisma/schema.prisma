@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Materials & inventory
+
+model Material {
+  id              String    @id @default(cuid())
+  name            String
+  category        String
+  unit            String
+  leadTimeDays    Int
+  safetyStockDays Int
+
+  supplierMaterials SupplierMaterial[]
+  usages            ProjectMaterialUsage[]
+  inventoryLevels   InventoryLevel[]
+  purchaseOrders    PurchaseOrder[]
+  forecastPerf      ForecastPerformance[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Supplier {
+  id      String             @id @default(cuid())
+  name    String
+  email   String?
+  phone   String?
+  leadTimeDaysDefault Int?
+
+  materials       SupplierMaterial[]
+  purchaseOrders  PurchaseOrder[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SupplierMaterial {
+  id         String   @id @default(cuid())
+  material   Material @relation(fields: [materialId], references: [id])
+  materialId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
+  supplierId String
+  pricePerUnit Float?
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  externalId  String?  @unique
+  name        String
+  projectType String
+
+  usages ProjectMaterialUsage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProjectMaterialUsage {
+  id         String   @id @default(cuid())
+  project    Project  @relation(fields: [projectId], references: [id])
+  projectId  String
+  material   Material @relation(fields: [materialId], references: [id])
+  materialId String
+  date       DateTime
+  quantity   Float
+}
+
+model InventoryLevel {
+  id           String   @id @default(cuid())
+  material     Material @relation(fields: [materialId], references: [id])
+  materialId   String  @unique
+  onHandQty    Float
+  reservedQty  Float   @default(0)
+  lastUpdatedAt DateTime @default(now())
+}
+
+model PurchaseOrder {
+  id                   String   @id @default(cuid())
+  material             Material @relation(fields: [materialId], references: [id])
+  materialId           String
+  supplier             Supplier @relation(fields: [supplierId], references: [id])
+  supplierId           String
+  qtyOrdered           Float
+  orderDate            DateTime
+  expectedDeliveryDate DateTime
+  status               String
+}
+
+model ForecastPerformance {
+  id          String   @id @default(cuid())
+  material    Material @relation(fields: [materialId], references: [id])
+  materialId  String
+  horizonDays Int
+  mape        Float
+  periodStart DateTime
+  periodEnd   DateTime
+  createdAt   DateTime @default(now())
+}
+
+// Solar
+
+model Site {
+  id          String   @id @default(cuid())
+  customerName String
+  address     String
+  latitude    Float
+  longitude   Float
+  climateZone String?
+
+  roofs      RoofSurface[]
+  scenarios  SolarScenario[]
+  energyBills EnergyBill[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RoofSurface {
+  id          String  @id @default(cuid())
+  site        Site    @relation(fields: [siteId], references: [id])
+  siteId      String
+  tiltDeg     Float
+  azimuthDeg  Float
+  areaM2      Float
+  shadingFactor Float @default(1.0)
+}
+
+model SolarScenario {
+  id            String  @id @default(cuid())
+  site          Site    @relation(fields: [siteId], references: [id])
+  siteId        String
+  systemSizeKw  Float
+  moduleType    String?
+  inverterType  String?
+  lossesPct     Float   @default(14.0)
+  createdBy     String?
+
+  simulationResult SolarSimulationResult?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EnergyBill {
+  id         String   @id @default(cuid())
+  site       Site     @relation(fields: [siteId], references: [id])
+  siteId     String
+  periodStart DateTime
+  periodEnd   DateTime
+  kwh        Float
+  cost       Float
+}
+
+model SolarSimulationResult {
+  id            String   @id @default(cuid())
+  scenario      SolarScenario @relation(fields: [scenarioId], references: [id])
+  scenarioId    String  @unique
+  annualKwh     Float
+  monthlyKwh    Json
+  performanceRatio Float?
+  paybackYears  Float
+  irr           Float?
+  createdAt     DateTime @default(now())
+}
+
+// RAG & support
+
+model RagDocument {
+  id        String   @id @default(cuid())
+  title     String
+  docType   String
+  product   String?
+  version   String?
+
+  chunks    RagChunk[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RagChunk {
+  id          String      @id @default(cuid())
+  document    RagDocument @relation(fields: [documentId], references: [id])
+  documentId  String
+  index       Int
+  content     String
+  // For production, consider a separate vector store; here we can use pgvector extension.
+  embedding   Bytes?
+  createdAt   DateTime @default(now())
+}
+
+model SupportSession {
+  id        String          @id @default(cuid())
+  startedAt DateTime        @default(now())
+  closedAt  DateTime?
+  messages  SupportMessage[]
+}
+
+model SupportMessage {
+  id           String         @id @default(cuid())
+  session      SupportSession @relation(fields: [sessionId], references: [id])
+  sessionId    String
+  fromRole     String
+  text         String
+  answerHelpful Boolean?
+  createdAt    DateTime @default(now())
+}
+
