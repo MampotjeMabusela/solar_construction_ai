@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { apiUrl } from "../api";
 
 type ChatMessage = {
   from: "user" | "assistant";
@@ -58,7 +59,7 @@ const AndyAgent: React.FC = () => {
     setMessages(nextMessages);
     setLoading(true);
     try {
-      const res = await fetch("/rag/query", {
+      const res = await fetch(apiUrl("/rag/query"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question }),

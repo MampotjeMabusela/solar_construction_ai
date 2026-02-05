@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { apiUrl } from "../../api";
 import {
   AreaChart,
   Area,
@@ -96,7 +97,7 @@ const MaterialsDashboard: React.FC = () => {
 
   const fetchData = useCallback(() => {
     setLoading(true);
-    fetch("/materials/inventory/recommendations")
+    fetch(apiUrl("/materials/inventory/recommendations"))
       .then((r) => r.json())
       .then((recData) => {
         const recs = recData.recommendations ?? [];
@@ -110,7 +111,7 @@ const MaterialsDashboard: React.FC = () => {
         setRecommendations(recs);
         return Promise.all(
           recs.map((rec: InventoryRecommendation) =>
-            fetch(`/materials/forecast/${encodeURIComponent(rec.materialId)}?horizonDays=30`).then(
+            fetch(apiUrl(`/materials/forecast/${encodeURIComponent(rec.materialId)}?horizonDays=30`)).then(
               (r) => r.json()
             )
           )

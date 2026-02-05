@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { apiUrl } from "../../api";
 
 type SolarResult = {
   annualKwh: number;
@@ -34,7 +35,7 @@ const SolarWizard: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/solar/scenarios", {
+      const res = await fetch(apiUrl("/solar/scenarios"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ site, roof, systemSizeKw }),

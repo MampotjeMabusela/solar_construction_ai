@@ -5,6 +5,7 @@ import app from "./app";
 dotenv.config();
 
 const port = Number(process.env.PORT) || 4000;
+const host = process.env.HOST ?? "0.0.0.0";
 const server = createServer(app);
 
 server.on("error", (err: NodeJS.ErrnoException) => {
@@ -13,7 +14,7 @@ server.on("error", (err: NodeJS.ErrnoException) => {
   }
 });
 
-server.listen(port, () => {
-  console.log(`Backend API listening on http://localhost:${port}`);
+server.listen(port, host, () => {
+  console.log(`Backend API listening on http://${host}:${port}`);
 });
 

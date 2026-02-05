@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { apiUrl } from "../../api";
 import {
   AreaChart,
   Area,
@@ -198,7 +199,7 @@ const AnalyticsDashboard: React.FC = () => {
 
   const fetchSummary = useCallback(() => {
     setError(null);
-    fetch("/analytics/summary")
+    fetch(apiUrl("/analytics/summary"))
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
